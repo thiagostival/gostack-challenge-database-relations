@@ -27,7 +27,17 @@ class FindOrderService {
     if (!order) {
       throw new AppError('Order not exist!');
     }
-    return order;
+
+    const { customer, order_products } = order;
+
+    return {
+      ...order,
+      customer,
+      order_products: order_products.map(products => ({
+        ...products,
+        quantity: Number(products.quantity),
+      })),
+    };
   }
 }
 

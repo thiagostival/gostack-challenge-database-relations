@@ -13,6 +13,12 @@ interface IProduct {
   quantity: number;
 }
 
+interface IProductOrder {
+  product_id: string;
+  price: number;
+  quantity: number;
+}
+
 interface IRequest {
   customer_id: string;
   products: IProduct[];
@@ -35,42 +41,41 @@ class CreateOrderService {
       throw new AppError('Customer not exist!');
     }
 
-    const findProducts = products.map(product => {
+    products.map(product => {
       if (!isUuid(product.id)) {
         throw new AppError('Product ID invalid!');
       }
       return product.id;
     });
-    const searchProducts = await this.productsRepository.findAllById(
-      findProducts,
-    );
+    const searchProducts = await this.productsRepository.findAllById(products);
 
-    if (findProducts.length !== searchProducts.length) {
+    if (products.length !== searchProducts.length) {
       throw new AppError(`Some product not found!`);
     }
 
-    const order_Products = searchProducts.map((product, index) => {
-      if (
-        product.id === products[index].id &&
-        product.quantity < products[index].quantity
-      ) {
-        throw new AppError(
-          `Insufficient stock for the product: ${product.name}`,
-        );
-      }
-      return {
-        product_id: product.id,
-        price: product.price,
-        quantity: products[index].quantity,
-      };
+    const order_Products: IProductOrder[] = [];
+    products.forEach((product, index) => {
+      searchProducts.forEach(searchProduct => {
+        if (product.id === searchProduct.id) {
+          if (searchProduct.quantity === 0) {
+            throw new AppError(
+              `Out of stock for product: ${searchProduct.name}`,
+            );
+          } else if (searchProduct.quantity < product.quantity) {
+            throw new AppError(
+              `Insufficient stock for the product: ${searchProduct.name}`,
+            );
+          }
+          order_Products[index] = {
+            product_id: product.id,
+            price: searchProduct.price,
+            quantity: product.quantity,
+          };
+        }
+      });
     });
 
-    const updateProducts = products.map(product => ({
-      id: product.id,
-      quantity: product.quantity,
-    }));
-
-    await this.productsRepository.updateQuantity(updateProducts);
+    await this.productsRepository.updateQuantity(products);
 
     const order = await this.ordersRepository.create({
       customer,

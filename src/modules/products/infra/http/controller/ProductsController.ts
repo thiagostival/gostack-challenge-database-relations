@@ -15,6 +15,11 @@ export default class ProductsController {
       quantity,
     });
 
-    return response.json(product);
+    const productFormatted = {
+      ...product,
+      quantity: Number(product.quantity),
+    };
+
+    return response.json(productFormatted);
   }
 }

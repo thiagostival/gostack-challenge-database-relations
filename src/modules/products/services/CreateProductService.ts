@@ -31,7 +31,10 @@ class CreateProductService {
       quantity,
     });
 
-    return product;
+    return {
+      ...product,
+      quantity: Number(product.quantity),
+    };
   }
 }
 

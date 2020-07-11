@@ -29,7 +29,10 @@ class ProductsRepository implements IProductsRepository {
 
     await this.ormRepository.save(product);
 
-    return product;
+    return {
+      ...product,
+      quantity: Number(quantity),
+    };
   }
 
   public async findByName(name: string): Promise<Product | undefined> {
@@ -38,14 +41,17 @@ class ProductsRepository implements IProductsRepository {
         name,
       },
     });
-
     return findProduct;
   }
 
-  public async findAllById(products: string[]): Promise<Product[]> {
+  public async findAllById(products: IFindProducts[]): Promise<Product[]> {
     const findProducts = await this.ormRepository.find({
-      where: { id: In(products) },
+      where: { id: In(products.map(product => product.id)) },
     });
+    findProducts.map(product => ({
+      ...product,
+      quantity: Number(product.quantity),
+    }));
     return findProducts;
   }
 
@@ -58,8 +64,11 @@ class ProductsRepository implements IProductsRepository {
       });
     });
 
-    const findProducts = products.map(product => product.id);
-    const updatedProducts = await this.findAllById(findProducts);
+    const updatedProducts = await this.findAllById(products);
+    updatedProducts.map(product => ({
+      ...product,
+      quantity: Number(product.quantity),
+    }));
 
     return updatedProducts;
   }
