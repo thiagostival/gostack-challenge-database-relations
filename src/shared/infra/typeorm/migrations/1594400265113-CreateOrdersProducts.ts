@@ -50,7 +50,7 @@ export default class CreateOrdersProducts1594400265113
         foreignKeys: [
           {
             name: 'OrderCreated',
-            referencedTableName: 'order',
+            referencedTableName: 'orders',
             referencedColumnNames: ['id'],
             columnNames: ['order_id'],
             onDelete: 'CASCADE',
